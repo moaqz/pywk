@@ -1,26 +1,23 @@
 from pathlib import Path
-from enum import Enum
+
 
 from commands.builtins import BuiltInCommands
 from commands.type import TypeCommand
 from commands.pwd import PWDCommand
 from commands.exit import ExitCommand
 from commands.command import Command
-
-
-class SpecialDirectory(Enum):
-    PARENT = ".."
-    CURRENT = "."
-    HOME = "~"
+from commands.cd import CDCommand
+from utils.directories import SpecialDirectory
 
 
 class Shell:
     def __init__(self) -> None:
-        self._pwd = Path.home()
+        self._cwd = Path.home()
         self._commands: dict[str, Command] = {
             "type": TypeCommand(),
-            "pwd": PWDCommand(),
+            "pwd": PWDCommand(self),
             "exit": ExitCommand(),
+            "cd": CDCommand(self)
         }
 
     def run(self):
@@ -49,13 +46,13 @@ class Shell:
     def _build_prompt(self) -> str:
         home_path = Path.home()
 
-        if self._pwd == home_path:
+        if self._cwd == home_path:
             return f"{SpecialDirectory.HOME.value}$"
-        elif self._pwd.is_relative_to(home_path):
-            relative_path = self._pwd.relative_to(home_path)
+        elif self._cwd.is_relative_to(home_path):
+            relative_path = self._cwd.relative_to(home_path)
             return f"{SpecialDirectory.HOME.value}/{relative_path}$"
         else:
-            return f"{self._pwd}$"
+            return f"{self._cwd}$"
 
     def _is_command_builtin(self, cmd: str) -> bool:
         try:
@@ -63,3 +60,9 @@ class Shell:
             return True
         except ValueError:
             return False
+        
+    def set_cwd(self, src_path: Path) -> None:
+        self._cwd = src_path
+
+    def get_cwd(self) -> Path:
+        return self._cwd
