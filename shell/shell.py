@@ -48,10 +48,15 @@ class Shell:
             return
 
     def _build_prompt(self) -> str:
-        if self._pwd == Path.home():
-            return f"{SpecialDirectory.HOME.value}$"
+        home_path = Path.home()
 
-        return f"{self._pwd}$"
+        if self._pwd == home_path:
+            return f"{SpecialDirectory.HOME.value}$"
+        elif self._pwd.is_relative_to(home_path):
+            relative_path = self._pwd.relative_to(home_path)
+            return f"{SpecialDirectory.HOME.value}/{relative_path}$"
+        else:
+            return f"{self._pwd}$"
 
     def _is_command_builtin(self, cmd: str) -> bool:
         try:
