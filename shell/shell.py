@@ -2,8 +2,10 @@ from pathlib import Path
 from enum import Enum
 
 from commands.builtins import BuiltInCommands
-from commands.type import command_type
-from commands.pwd import command_pwd
+from commands.type import TypeCommand
+from commands.pwd import PWDCommand
+from commands.exit import ExitCommand
+from commands.command import Command
 
 
 class SpecialDirectory(Enum):
@@ -16,10 +18,11 @@ class Shell:
     _pwd: Path
 
     def __init__(self) -> None:
-        self._pwd = Path()
-        self._commands = {
-            "type": command_type,
-            "pwd": command_pwd,
+        self._pwd = Path.home()
+        self._commands: dict[str, Command] = {
+            "type": TypeCommand(),
+            "pwd": PWDCommand(),
+            "exit": ExitCommand(),
         }
 
     def run(self):
@@ -34,12 +37,10 @@ class Shell:
                 args = parts[1:] if len(line) > 1 else []
 
                 if self._is_command_builtin(cmd):
-                    if cmd == BuiltInCommands.EXIT.value:
-                        break
+                    command = self._commands.get(cmd)
+                    if command is not None:
+                        command.execute(args)
 
-                    fn = self._commands.get(cmd)
-                    if fn is not None:
-                        fn(args)
                 else:
                     print(f"{cmd}: command not found")
 
