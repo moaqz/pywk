@@ -15,8 +15,6 @@ class SpecialDirectory(Enum):
 
 
 class Shell:
-    _pwd: Path
-
     def __init__(self) -> None:
         self._pwd = Path.home()
         self._commands: dict[str, Command] = {
