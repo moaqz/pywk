@@ -10,5 +10,7 @@ A simple shell implementation in Python for learning purposes.
 - **Built-in Commands**:
   - `type` - Display command type (builtin or external)  
   - `exit` - Exit the shell
-- **Command Discovery**: Finds external commands in PATH
+  - `cd` - Change directory
+  - `pwd` - Print current working directory
 - **Basic Error Handling**: Handles invalid commands and arguments
+- **External Command Execution**: Finds and executes external commands from PATH
