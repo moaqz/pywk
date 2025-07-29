@@ -1,4 +1,5 @@
 from pathlib import Path
+import subprocess
 
 
 from commands.builtins import BuiltInCommands
@@ -8,6 +9,7 @@ from commands.exit import ExitCommand
 from commands.command import Command
 from commands.cd import CDCommand
 from utils.directories import SpecialDirectory
+from utils.find_command import find_command, CommandNotFound
 
 
 class Shell:
@@ -17,7 +19,7 @@ class Shell:
             "type": TypeCommand(),
             "pwd": PWDCommand(self),
             "exit": ExitCommand(),
-            "cd": CDCommand(self)
+            "cd": CDCommand(self),
         }
 
     def run(self):
@@ -35,13 +37,28 @@ class Shell:
                     command = self._commands.get(cmd)
                     if command is not None:
                         command.execute(args)
-
                 else:
-                    print(f"{cmd}: command not found")
+                    self._exec_external_command(cmd, args)
 
         except EOFError:
             print("")
             return
+
+    def _exec_external_command(self, cmd: str, args: list[str]) -> None:
+        try:
+            cmd_path = find_command(cmd)
+            result = subprocess.run(
+                [cmd_path, *args], capture_output=True, text=True, cwd=self._cwd
+            )
+
+            # Use end="" to prevent adding extra newline to command output
+            if result.stdout:
+                print(result.stdout, end="")
+            if result.stderr:
+                print(result.stderr, end="")
+
+        except CommandNotFound:
+            print(f"{cmd}: command not found")
 
     def _build_prompt(self) -> str:
         home_path = Path.home()
@@ -60,7 +77,7 @@ class Shell:
             return True
         except ValueError:
             return False
-        
+
     def set_cwd(self, src_path: Path) -> None:
         self._cwd = src_path
 
